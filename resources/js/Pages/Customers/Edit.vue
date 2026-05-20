@@ -28,11 +28,11 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Edit customer" />
+    <Head :title="$t('Edit customer')" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Edit customer</h2>
+            <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ $t('Edit customer') }}</h2>
         </template>
 
         <div class="py-12">
@@ -41,13 +41,13 @@ const submit = () => {
                     <form class="space-y-6 p-6" @submit.prevent="submit">
                         <div class="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <InputLabel for="first_name" value="First name" />
+                                <InputLabel for="first_name" :value="$t('First name')" />
                                 <TextInput id="first_name" v-model="form.first_name" class="mt-1 block w-full" required autofocus />
                                 <InputError class="mt-2" :message="form.errors.first_name" />
                             </div>
 
                             <div>
-                                <InputLabel for="last_name" value="Last name" />
+                                <InputLabel for="last_name" :value="$t('Last name')" />
                                 <TextInput id="last_name" v-model="form.last_name" class="mt-1 block w-full" required />
                                 <InputError class="mt-2" :message="form.errors.last_name" />
                             </div>
@@ -55,29 +55,29 @@ const submit = () => {
 
                         <div class="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <InputLabel for="phone" value="Phone" />
+                                <InputLabel for="phone" :value="$t('Phone')" />
                                 <TextInput id="phone" v-model="form.phone" class="mt-1 block w-full" required />
                                 <InputError class="mt-2" :message="form.errors.phone" />
                             </div>
 
                             <div>
-                                <InputLabel for="email" value="Email" />
+                                <InputLabel for="email" :value="$t('Email')" />
                                 <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" />
                                 <InputError class="mt-2" :message="form.errors.email" />
                             </div>
                         </div>
 
                         <div>
-                            <InputLabel for="notes" value="Notes" />
+                            <InputLabel for="notes" :value="$t('Notes')" />
                             <textarea id="notes" v-model="form.notes" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
                             <InputError class="mt-2" :message="form.errors.notes" />
                         </div>
 
                         <div class="flex items-center justify-end gap-3">
                             <Link :href="route('customers.index')">
-                                <SecondaryButton type="button">Cancel</SecondaryButton>
+                                <SecondaryButton type="button">{{ $t('Cancel') }}</SecondaryButton>
                             </Link>
-                            <PrimaryButton :disabled="form.processing">Update</PrimaryButton>
+                            <PrimaryButton :disabled="form.processing">{{ $t('Update') }}</PrimaryButton>
                         </div>
                     </form>
                 </div>

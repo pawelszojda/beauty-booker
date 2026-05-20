@@ -4,6 +4,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     services: {
@@ -19,27 +20,27 @@ const formatPrice = (price) => {
         return '-';
     }
 
-    return new Intl.NumberFormat('en', {
+    return new Intl.NumberFormat('pl', {
         style: 'currency',
         currency: 'PLN',
     }).format(Number(price));
 };
 
-const confirmDelete = () => confirm('Are you sure you want to delete this service?');
+const confirmDelete = () => confirm(trans('Are you sure you want to delete this service?'));
 </script>
 
 <template>
-    <Head title="Services" />
+    <Head :title="$t('Services')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Services
+                    {{ $t('Services') }}
                 </h2>
 
                 <Link :href="route('services.create')">
-                    <PrimaryButton>Add service</PrimaryButton>
+                    <PrimaryButton>{{ $t('Add service') }}</PrimaryButton>
                 </Link>
             </div>
         </template>
@@ -56,11 +57,11 @@ const confirmDelete = () => confirm('Are you sure you want to delete this servic
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Duration</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Price</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Appointments</th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Name') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Duration') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Price') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Appointments') }}</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
@@ -72,7 +73,7 @@ const confirmDelete = () => confirm('Are you sure you want to delete this servic
                                         <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
                                             <div class="flex justify-end gap-2">
                                                 <Link :href="route('services.edit', service.id)">
-                                                    <SecondaryButton>Edit</SecondaryButton>
+                                                    <SecondaryButton>{{ $t('Edit') }}</SecondaryButton>
                                                 </Link>
                                                 <Link
                                                     :href="route('services.destroy', service.id)"
@@ -80,7 +81,7 @@ const confirmDelete = () => confirm('Are you sure you want to delete this servic
                                                     as="button"
                                                     :onBefore="confirmDelete"
                                                 >
-                                                    <DangerButton>Delete</DangerButton>
+                                                    <DangerButton>{{ $t('Delete') }}</DangerButton>
                                                 </Link>
                                             </div>
                                         </td>
@@ -90,7 +91,7 @@ const confirmDelete = () => confirm('Are you sure you want to delete this servic
                         </div>
 
                         <div v-else class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600">
-                            No services yet.
+                            {{ $t('No services yet.') }}
                         </div>
                     </div>
                 </div>

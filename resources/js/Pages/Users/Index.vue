@@ -4,6 +4,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     users: {
@@ -14,21 +15,21 @@ const props = defineProps({
 
 const page = usePage();
 
-const confirmDelete = () => confirm('Are you sure you want to delete this user?');
+const confirmDelete = () => confirm(trans('Are you sure you want to delete this user?'));
 
-const roleLabel = (role) => role?.replace('_', ' ') ?? '-';
+const roleLabel = (role) => role ? trans(role.replace('_', ' ')) : '-';
 </script>
 
 <template>
-    <Head title="Users" />
+    <Head :title="$t('Users')" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Users</h2>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ $t('Users') }}</h2>
 
                 <Link :href="route('users.create')">
-                    <PrimaryButton>Add user</PrimaryButton>
+                    <PrimaryButton>{{ $t('Add user') }}</PrimaryButton>
                 </Link>
             </div>
         </template>
@@ -45,11 +46,11 @@ const roleLabel = (role) => role?.replace('_', ' ') ?? '-';
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Role</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Created</th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Name') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Email') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Role') }}</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Created') }}</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
@@ -62,12 +63,12 @@ const roleLabel = (role) => role?.replace('_', ' ') ?? '-';
                                             </span>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
-                                            {{ new Date(user.created_at).toLocaleDateString() }}
+                                            {{ new Date(user.created_at).toLocaleDateString('pl') }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-4 text-right text-sm">
                                             <div class="flex justify-end gap-2">
                                                 <Link :href="route('users.edit', user.id)">
-                                                    <SecondaryButton>Edit</SecondaryButton>
+                                                    <SecondaryButton>{{ $t('Edit') }}</SecondaryButton>
                                                 </Link>
                                                 <Link
                                                     :href="route('users.destroy', user.id)"
@@ -75,7 +76,7 @@ const roleLabel = (role) => role?.replace('_', ' ') ?? '-';
                                                     as="button"
                                                     :onBefore="confirmDelete"
                                                 >
-                                                    <DangerButton>Delete</DangerButton>
+                                                    <DangerButton>{{ $t('Delete') }}</DangerButton>
                                                 </Link>
                                             </div>
                                         </td>
@@ -85,7 +86,7 @@ const roleLabel = (role) => role?.replace('_', ' ') ?? '-';
                         </div>
 
                         <div v-else class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600">
-                            No users yet.
+                            {{ $t('No users yet.') }}
                         </div>
                     </div>
                 </div>

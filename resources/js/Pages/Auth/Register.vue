@@ -24,12 +24,12 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Register" />
+        <Head :title="$t('Register')" />
 
         <form @submit.prevent="submit">
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <InputLabel for="first_name" value="First name" />
+                    <InputLabel for="first_name" :value="$t('First name')" />
 
                     <TextInput
                         id="first_name"
@@ -45,7 +45,7 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <InputLabel for="last_name" value="Last name" />
+                    <InputLabel for="last_name" :value="$t('Last name')" />
 
                     <TextInput
                         id="last_name"
@@ -61,7 +61,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="phone" value="Phone" />
+                <InputLabel for="phone" :value="$t('Phone')" />
 
                 <TextInput
                     id="phone"
@@ -76,7 +76,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" :value="$t('Email')" />
 
                 <TextInput
                     id="email"
@@ -91,7 +91,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" :value="$t('Password')" />
 
                 <TextInput
                     id="password"
@@ -108,7 +108,7 @@ const submit = () => {
             <div class="mt-4">
                 <InputLabel
                     for="password_confirmation"
-                    value="Confirm Password"
+                    :value="$t('Confirm Password')"
                 />
 
                 <TextInput
@@ -131,7 +131,7 @@ const submit = () => {
                     :href="route('login')"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    Already registered?
+                    {{ $t('Already registered?') }}
                 </Link>
 
                 <PrimaryButton
@@ -139,7 +139,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Register
+                    {{ $t('Register') }}
                 </PrimaryButton>
             </div>
         </form>

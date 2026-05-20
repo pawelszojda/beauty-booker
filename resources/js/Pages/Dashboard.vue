@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     appointments: { type: Array, default: () => [] },
@@ -247,8 +248,8 @@ const weekDays = computed(() =>
         return {
             date,
             key: toDateKey(date),
-            label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
-            day: new Intl.DateTimeFormat('en', { day: '2-digit', month: '2-digit' }).format(date),
+            label: new Intl.DateTimeFormat('pl', { weekday: 'short' }).format(date),
+            day: new Intl.DateTimeFormat('pl', { day: '2-digit', month: '2-digit' }).format(date),
         };
     }),
 );
@@ -259,20 +260,20 @@ const mobileDays = computed(() =>
         return {
             date,
             key: toDateKey(date),
-            label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
-            day: new Intl.DateTimeFormat('en', { day: '2-digit', month: '2-digit' }).format(date),
+            label: new Intl.DateTimeFormat('pl', { weekday: 'short' }).format(date),
+            day: new Intl.DateTimeFormat('pl', { day: '2-digit', month: '2-digit' }).format(date),
         };
     }),
 );
 
 const weekRangeLabel = computed(() => {
     const end = addDays(weekStart.value, 6);
-    const formatter = new Intl.DateTimeFormat('en-GB');
+    const formatter = new Intl.DateTimeFormat('pl');
     return `${formatter.format(weekStart.value)} - ${formatter.format(end)}`;
 });
 
 const mobileRangeLabel = computed(() => {
-    const formatter = new Intl.DateTimeFormat('en-GB');
+    const formatter = new Intl.DateTimeFormat('pl');
     return `${formatter.format(mobileDays.value[0].date)} - ${formatter.format(mobileDays.value[1].date)}`;
 });
 
@@ -285,7 +286,7 @@ const slotsForCell = (dateKey, hour) =>
     });
 
 const formatDateTime = (dateTime) => {
-    return new Intl.DateTimeFormat('en', {
+    return new Intl.DateTimeFormat('pl', {
         dateStyle: 'medium',
         timeStyle: 'short',
     }).format(new Date(dateTime));
@@ -296,7 +297,7 @@ const formatPrice = (price) => {
         return '-';
     }
 
-    return new Intl.NumberFormat('en', {
+    return new Intl.NumberFormat('pl', {
         style: 'currency',
         currency: 'PLN',
     }).format(Number(price));
@@ -414,8 +415,10 @@ const updateAppointment = () => {
     });
 };
 
+const statusLabel = (status) => trans(status);
+
 const deleteAppointment = () => {
-    if (!confirm('Are you sure you want to delete this appointment?')) {
+    if (!confirm(trans('Are you sure you want to delete this appointment?'))) {
         return;
     }
 
@@ -427,11 +430,11 @@ const deleteAppointment = () => {
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head :title="$t('Dashboard')" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Dashboard</h2>
+            <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ $t('Dashboard') }}</h2>
         </template>
 
         <div class="py-12">
@@ -439,22 +442,22 @@ const deleteAppointment = () => {
                 <div class="overflow-visible bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <div class="mb-6">
-                            <h3 class="text-lg font-semibold">Book new appointment</h3>
+                            <h3 class="text-lg font-semibold">{{ $t('Book new appointment') }}</h3>
                             <p class="mt-1 text-sm text-gray-600">
-                                Choose service, stylist and one free calendar slot.
+                                {{ $t('Choose service, stylist and one free calendar slot.') }}
                             </p>
                         </div>
 
                         <form class="space-y-6" @submit.prevent="submit">
                             <div class="grid gap-6 md:grid-cols-4">
                                 <div v-if="!isCustomer" class="relative">
-                                    <InputLabel for="customer_search" value="Customer" />
+                                    <InputLabel for="customer_search" :value="$t('Customer')" />
                                     <input
                                         id="customer_search"
                                         v-model="customerSearch"
                                         type="text"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Click or type name, surname or phone"
+                                        :placeholder="$t('Click or type name, surname or phone')"
                                         autocomplete="off"
                                         required
                                         @focus="openCustomerDropdown"
@@ -485,26 +488,26 @@ const deleteAppointment = () => {
                                         </button>
 
                                         <div v-if="!filteredCustomers.length" class="px-3 py-3 text-sm text-gray-500">
-                                            No customers found.
+                                            {{ $t('No customers found.') }}
                                         </div>
                                     </div>
 
                                     <p v-if="selectedCustomer" class="mt-1 text-xs text-gray-500">
-                                        Selected: {{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}
+                                        {{ $t('Selected') }}: {{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}
                                     </p>
 
                                     <InputError class="mt-2" :message="form.errors.customer_id" />
                                 </div>
 
                                 <div>
-                                    <InputLabel for="service_id" value="Service" />
+                                    <InputLabel for="service_id" :value="$t('Service')" />
                                     <select
                                         id="service_id"
                                         v-model="form.service_id"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         required
                                     >
-                                        <option value="" disabled>Select service</option>
+                                        <option value="" disabled>{{ $t('Select service') }}</option>
                                         <option v-for="service in props.services" :key="service.id" :value="service.id">
                                             {{ service.name }} - {{ service.duration_minutes }} min
                                         </option>
@@ -513,14 +516,14 @@ const deleteAppointment = () => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="user_id" value="Stylist" />
+                                    <InputLabel for="user_id" :value="$t('Stylist')" />
                                     <select
                                         id="user_id"
                                         v-model="form.user_id"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         required
                                     >
-                                        <option value="" disabled>Select stylist</option>
+                                        <option value="" disabled>{{ $t('Select stylist') }}</option>
                                         <option v-for="stylist in props.stylists" :key="stylist.id" :value="stylist.id">
                                             {{ stylist.name }}
                                         </option>
@@ -529,30 +532,30 @@ const deleteAppointment = () => {
                                 </div>
 
                                 <div>
-                                    <InputLabel value="Selected slot" />
+                                    <InputLabel :value="$t('Selected slot')" />
                                     <button
                                         type="button"
                                         class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-left text-sm text-gray-700 shadow-sm transition hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                                         @click="showSlotModal = true"
                                     >
                                         <span v-if="selectedSlot">
-                                            {{ formatDateTime(selectedSlot.start_time) }} with {{ selectedStylist?.name }}
+                                            {{ formatDateTime(selectedSlot.start_time) }} {{ $t('with') }} {{ selectedStylist?.name }}
                                         </span>
-                                        <span v-else class="text-gray-500">Click to choose slot</span>
+                                        <span v-else class="text-gray-500">{{ $t('Click to choose slot') }}</span>
                                     </button>
                                     <InputError class="mt-2" :message="form.errors.start_time" />
                                 </div>
                             </div>
 
                             <div v-if="selectedService" class="rounded-md bg-gray-50 p-4 text-sm text-gray-700">
-                                Selected service: <strong>{{ selectedService.name }}</strong>,
-                                duration <strong>{{ selectedService.duration_minutes }} minutes</strong>,
-                                price <strong>{{ formatPrice(selectedService.price) }}</strong>.
+                                {{ $t('Selected service:') }} <strong>{{ selectedService.name }}</strong>,
+                                {{ $t('duration') }} <strong>{{ selectedService.duration_minutes }} {{ $t('minutes') }}</strong>,
+                                {{ $t('Price').toLowerCase() }} <strong>{{ formatPrice(selectedService.price) }}</strong>.
                             </div>
 
                             <div class="flex justify-end">
                                 <PrimaryButton :disabled="form.processing || !form.service_id || !form.user_id || !form.start_time">
-                                    Book appointment
+                                    {{ $t('Book appointment') }}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -563,22 +566,22 @@ const deleteAppointment = () => {
                     <div class="p-6 text-gray-900">
                         <div class="mb-6 flex items-center justify-between">
                             <div>
-                                <h3 class="text-lg font-semibold">Appointments</h3>
+                                <h3 class="text-lg font-semibold">{{ $t('Appointments') }}</h3>
                                 <p class="mt-1 text-sm text-gray-600">
                                     <span v-if="props.appointmentScope === 'customer'">
-                                        Showing appointments assigned to your customer profile.
+                                        {{ $t('Showing appointments assigned to your customer profile.') }}
                                     </span>
-                                    <span v-else>Showing all appointments.</span>
+                                    <span v-else>{{ $t('Showing all appointments.') }}</span>
                                 </p>
                             </div>
 
                             <span class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                                {{ sortedAppointments.length }} total
+                                {{ sortedAppointments.length }} {{ $t('total') }}
                             </span>
                         </div>
 
                         <div v-if="!isCustomer" class="mb-4 max-w-xl">
-                            <InputLabel for="appointment_customer_filter" value="Filter by customer" />
+                            <InputLabel for="appointment_customer_filter" :value="$t('Filter by customer')" />
                             <div class="relative mt-1 flex gap-2">
                                 <div class="relative flex-1">
                                     <input
@@ -586,7 +589,7 @@ const deleteAppointment = () => {
                                         v-model="appointmentCustomerSearch"
                                         type="text"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Click or type name, surname or phone"
+                                        :placeholder="$t('Click or type name, surname or phone')"
                                         autocomplete="off"
                                         @focus="openAppointmentCustomerDropdown"
                                         @input="clearAppointmentFilterCustomerIfTyping"
@@ -614,13 +617,13 @@ const deleteAppointment = () => {
                                         </button>
 
                                         <div v-if="!filteredAppointmentCustomers.length" class="px-3 py-3 text-sm text-gray-500">
-                                            No customers found.
+                                            {{ $t('No customers found.') }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <SecondaryButton type="button" @click="clearAppointmentCustomerFilter">
-                                    Clear
+                                    {{ $t('Clear') }}
                                 </SecondaryButton>
                             </div>
                         </div>
@@ -630,31 +633,31 @@ const deleteAppointment = () => {
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('start_time')">Date{{ sortIndicator('start_time') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('start_time')">{{ $t('Date') }}{{ sortIndicator('start_time') }}</button>
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('customer')">Customer{{ sortIndicator('customer') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('customer')">{{ $t('Customer') }}{{ sortIndicator('customer') }}</button>
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('service')">Service{{ sortIndicator('service') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('service')">{{ $t('Service') }}{{ sortIndicator('service') }}</button>
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('stylist')">Stylist{{ sortIndicator('stylist') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('stylist')">{{ $t('Stylist') }}{{ sortIndicator('stylist') }}</button>
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('status')">Status{{ sortIndicator('status') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('status')">{{ $t('Status') }}{{ sortIndicator('status') }}</button>
                                         </th>
                                         <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            <button type="button" @click="sortAppointmentsBy('price')">Price{{ sortIndicator('price') }}</button>
+                                            <button type="button" @click="sortAppointmentsBy('price')">{{ $t('Price') }}{{ sortIndicator('price') }}</button>
                                         </th>
-                                        <th v-if="!isCustomer" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                        <th v-if="!isCustomer" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">{{ $t('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
                                     <tr v-for="appointment in sortedAppointments" :key="appointment.id">
                                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
                                             <div>{{ formatDateTime(appointment.start_time) }}</div>
-                                            <div class="text-xs text-gray-500">to {{ formatDateTime(appointment.end_time) }}</div>
+                                            <div class="text-xs text-gray-500">{{ $t('to') }} {{ formatDateTime(appointment.end_time) }}</div>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
                                             <div>{{ appointment.customer?.first_name }} {{ appointment.customer?.last_name }}</div>
@@ -667,7 +670,7 @@ const deleteAppointment = () => {
                                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">{{ appointment.user?.name }}</td>
                                         <td class="whitespace-nowrap px-4 py-4 text-sm">
                                             <span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                                                {{ appointment.status }}
+                                                {{ statusLabel(appointment.status) }}
                                             </span>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-4 text-right text-sm text-gray-900">
@@ -675,7 +678,7 @@ const deleteAppointment = () => {
                                         </td>
                                         <td v-if="!isCustomer" class="whitespace-nowrap px-4 py-4 text-right text-sm">
                                             <SecondaryButton type="button" @click="startEditingAppointment(appointment)">
-                                                Edit
+                                                {{ $t('Edit') }}
                                             </SecondaryButton>
                                         </td>
                                     </tr>
@@ -684,7 +687,7 @@ const deleteAppointment = () => {
                         </div>
 
                         <div v-else class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600">
-                            No appointments found.
+                            {{ $t('No appointments found.') }}
                         </div>
                     </div>
                 </div>
@@ -698,7 +701,7 @@ const deleteAppointment = () => {
         >
             <div class="w-full max-w-3xl rounded-lg bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b px-6 py-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Edit appointment</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ $t('Edit appointment') }}</h3>
                     <button class="text-2xl leading-none text-gray-400 hover:text-gray-600" type="button" @click="closeEditAppointment">
                         &times;
                     </button>
@@ -707,7 +710,7 @@ const deleteAppointment = () => {
                 <form class="space-y-6 p-6" @submit.prevent="updateAppointment">
                     <div class="grid gap-6 md:grid-cols-2">
                         <div>
-                            <InputLabel for="edit_customer_id" value="Customer" />
+                            <InputLabel for="edit_customer_id" :value="$t('Customer')" />
                             <select
                                 id="edit_customer_id"
                                 v-model="editForm.customer_id"
@@ -722,7 +725,7 @@ const deleteAppointment = () => {
                         </div>
 
                         <div>
-                            <InputLabel for="edit_service_id" value="Service" />
+                            <InputLabel for="edit_service_id" :value="$t('Service')" />
                             <select
                                 id="edit_service_id"
                                 v-model="editForm.service_id"
@@ -737,7 +740,7 @@ const deleteAppointment = () => {
                         </div>
 
                         <div>
-                            <InputLabel for="edit_user_id" value="Stylist" />
+                            <InputLabel for="edit_user_id" :value="$t('Stylist')" />
                             <select
                                 id="edit_user_id"
                                 v-model="editForm.user_id"
@@ -752,7 +755,7 @@ const deleteAppointment = () => {
                         </div>
 
                         <div>
-                            <InputLabel for="edit_start_time" value="Start time" />
+                            <InputLabel for="edit_start_time" :value="$t('Start time')" />
                             <input
                                 id="edit_start_time"
                                 v-model="editForm.start_time"
@@ -764,27 +767,27 @@ const deleteAppointment = () => {
                         </div>
 
                         <div>
-                            <InputLabel for="edit_status" value="Status" />
+                            <InputLabel for="edit_status" :value="$t('Status')" />
                             <select
                                 id="edit_status"
                                 v-model="editForm.status"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 required
                             >
-                                <option value="oczekująca">oczekująca</option>
-                                <option value="potwierdzona">potwierdzona</option>
-                                <option value="odwołana">odwołana</option>
+                                <option value="oczekująca">{{ $t('oczekująca') }}</option>
+                                <option value="potwierdzona">{{ $t('potwierdzona') }}</option>
+                                <option value="odwołana">{{ $t('odwołana') }}</option>
                             </select>
                             <InputError class="mt-2" :message="editForm.errors.status" />
                         </div>
                     </div>
 
                     <div class="flex justify-between gap-3">
-                        <DangerButton type="button" @click="deleteAppointment">Delete appointment</DangerButton>
+                        <DangerButton type="button" @click="deleteAppointment">{{ $t('Delete appointment') }}</DangerButton>
 
                         <div class="flex gap-3">
-                            <SecondaryButton type="button" @click="closeEditAppointment">Cancel</SecondaryButton>
-                            <PrimaryButton :disabled="editForm.processing">Update appointment</PrimaryButton>
+                            <SecondaryButton type="button" @click="closeEditAppointment">{{ $t('Cancel') }}</SecondaryButton>
+                            <PrimaryButton :disabled="editForm.processing">{{ $t('Update appointment') }}</PrimaryButton>
                         </div>
                     </div>
                 </form>
@@ -799,10 +802,10 @@ const deleteAppointment = () => {
             <div class="max-h-[90vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b px-6 py-4">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Choose appointment slot</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ $t('Choose appointment slot') }}</h3>
                         <p class="text-sm text-gray-600">
-                            <span v-if="isCustomer">Free slots and your taken appointments are visible.</span>
-                            <span v-else>Taken slots include appointment details.</span>
+                            <span v-if="isCustomer">{{ $t('Free slots and your taken appointments are visible.') }}</span>
+                            <span v-else>{{ $t('Taken slots include appointment details.') }}</span>
                         </p>
                     </div>
 
@@ -814,15 +817,15 @@ const deleteAppointment = () => {
                 <div class="border-b px-6 py-4">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div class="hidden items-center gap-2 md:flex">
-                            <SecondaryButton type="button" @click="weekOffset--">Previous week</SecondaryButton>
-                            <SecondaryButton type="button" @click="goToCurrentWeek">Today</SecondaryButton>
-                            <SecondaryButton type="button" @click="weekOffset++">Next week</SecondaryButton>
+                            <SecondaryButton type="button" @click="weekOffset--">{{ $t('Previous week') }}</SecondaryButton>
+                            <SecondaryButton type="button" @click="goToCurrentWeek">{{ $t('Today') }}</SecondaryButton>
+                            <SecondaryButton type="button" @click="weekOffset++">{{ $t('Next week') }}</SecondaryButton>
                         </div>
 
                         <div class="flex items-center gap-2 md:hidden">
-                            <SecondaryButton type="button" @click="mobileDayOffset -= 2">Previous</SecondaryButton>
-                            <SecondaryButton type="button" @click="goToCurrentMobileDays">Today</SecondaryButton>
-                            <SecondaryButton type="button" @click="mobileDayOffset += 2">Next</SecondaryButton>
+                            <SecondaryButton type="button" @click="mobileDayOffset -= 2">{{ $t('Previous') }}</SecondaryButton>
+                            <SecondaryButton type="button" @click="goToCurrentMobileDays">{{ $t('Today') }}</SecondaryButton>
+                            <SecondaryButton type="button" @click="mobileDayOffset += 2">{{ $t('Next') }}</SecondaryButton>
                         </div>
 
                         <div class="hidden text-center text-lg font-semibold text-gray-900 md:block">
@@ -837,7 +840,7 @@ const deleteAppointment = () => {
                                 v-model="slotStylistFilter"
                                 class="block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             >
-                                <option value="">All stylists</option>
+                                <option value="">{{ $t('All stylists') }}</option>
                                 <option v-for="stylist in props.stylists" :key="stylist.id" :value="String(stylist.id)">
                                     {{ stylist.name }}
                                 </option>
@@ -849,7 +852,7 @@ const deleteAppointment = () => {
                 <div class="max-h-[65vh] overflow-auto p-6">
                     <div class="md:hidden">
                         <div class="grid grid-cols-[64px_repeat(2,minmax(0,1fr))] border-b border-gray-200">
-                            <div class="bg-gray-50 p-2 text-xs font-medium uppercase text-gray-500">Hour</div>
+                            <div class="bg-gray-50 p-2 text-xs font-medium uppercase text-gray-500">{{ $t('Hour') }}</div>
                             <div
                                 v-for="day in mobileDays"
                                 :key="day.key"
@@ -890,7 +893,7 @@ const deleteAppointment = () => {
                                     <div class="flex items-center justify-between gap-1">
                                         <span class="font-semibold text-gray-900">{{ slot.time }}</span>
                                         <span :class="slot.status === 'free' ? 'text-green-700' : 'text-red-700'">
-                                            {{ slot.status }}
+                                            {{ statusLabel(slot.status) }}
                                         </span>
                                     </div>
                                     <div class="mt-1 truncate text-gray-600">{{ slot.stylist_name }}</div>
@@ -909,7 +912,7 @@ const deleteAppointment = () => {
 
                     <div class="hidden min-w-[1000px] md:block">
                         <div class="grid grid-cols-[80px_repeat(7,minmax(120px,1fr))] border-b border-gray-200">
-                            <div class="bg-gray-50 p-3 text-xs font-medium uppercase text-gray-500">Hour</div>
+                            <div class="bg-gray-50 p-3 text-xs font-medium uppercase text-gray-500">{{ $t('Hour') }}</div>
                             <div
                                 v-for="day in weekDays"
                                 :key="day.key"
@@ -950,7 +953,7 @@ const deleteAppointment = () => {
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="font-semibold text-gray-900">{{ slot.time }}</span>
                                         <span :class="slot.status === 'free' ? 'text-green-700' : 'text-red-700'">
-                                            {{ slot.status }}
+                                            {{ statusLabel(slot.status) }}
                                         </span>
                                     </div>
                                     <div class="mt-1 truncate text-gray-600">{{ slot.stylist_name }}</div>
