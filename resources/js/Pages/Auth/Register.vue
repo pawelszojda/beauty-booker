@@ -7,7 +7,9 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
-    name: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -25,20 +27,52 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <InputLabel for="first_name" value="First name" />
+
+                    <TextInput
+                        id="first_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="form.first_name"
+                        required
+                        autofocus
+                        autocomplete="given-name"
+                    />
+
+                    <InputError class="mt-2" :message="form.errors.first_name" />
+                </div>
+
+                <div>
+                    <InputLabel for="last_name" value="Last name" />
+
+                    <TextInput
+                        id="last_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        v-model="form.last_name"
+                        required
+                        autocomplete="family-name"
+                    />
+
+                    <InputError class="mt-2" :message="form.errors.last_name" />
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="phone" value="Phone" />
 
                 <TextInput
-                    id="name"
+                    id="phone"
                     type="text"
                     class="mt-1 block w-full"
-                    v-model="form.name"
+                    v-model="form.phone"
                     required
-                    autofocus
-                    autocomplete="name"
+                    autocomplete="tel"
                 />
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="form.errors.phone" />
             </div>
 
             <div class="mt-4">
