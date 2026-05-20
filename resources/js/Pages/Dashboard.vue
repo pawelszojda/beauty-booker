@@ -20,6 +20,7 @@ const props = defineProps({
 const page = usePage();
 const showSlotModal = ref(false);
 const weekOffset = ref(0);
+const mobileDayOffset = ref(0);
 const customerSearch = ref('');
 const showCustomerDropdown = ref(false);
 const slotStylistFilter = ref('');
@@ -234,10 +235,27 @@ const weekDays = computed(() =>
     }),
 );
 
+const mobileDays = computed(() =>
+    Array.from({ length: 2 }, (_, index) => {
+        const date = addDays(today(), mobileDayOffset.value + index);
+        return {
+            date,
+            key: toDateKey(date),
+            label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
+            day: new Intl.DateTimeFormat('en', { day: '2-digit', month: '2-digit' }).format(date),
+        };
+    }),
+);
+
 const weekRangeLabel = computed(() => {
     const end = addDays(weekStart.value, 6);
     const formatter = new Intl.DateTimeFormat('en-GB');
     return `${formatter.format(weekStart.value)} - ${formatter.format(end)}`;
+});
+
+const mobileRangeLabel = computed(() => {
+    const formatter = new Intl.DateTimeFormat('en-GB');
+    return `${formatter.format(mobileDays.value[0].date)} - ${formatter.format(mobileDays.value[1].date)}`;
 });
 
 const hours = Array.from({ length: 9 }, (_, index) => 9 + index);
@@ -285,6 +303,10 @@ const chooseSlot = (slot) => {
 
 const goToCurrentWeek = () => {
     weekOffset.value = 0;
+};
+
+const goToCurrentMobileDays = () => {
+    mobileDayOffset.value = 0;
 };
 
 const openCustomerDropdown = (event) => {
@@ -773,14 +795,23 @@ const deleteAppointment = () => {
 
                 <div class="border-b px-6 py-4">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div class="flex items-center gap-2">
+                        <div class="hidden items-center gap-2 md:flex">
                             <SecondaryButton type="button" @click="weekOffset--">Previous week</SecondaryButton>
                             <SecondaryButton type="button" @click="goToCurrentWeek">Today</SecondaryButton>
                             <SecondaryButton type="button" @click="weekOffset++">Next week</SecondaryButton>
                         </div>
 
-                        <div class="text-center text-lg font-semibold text-gray-900">
+                        <div class="flex items-center gap-2 md:hidden">
+                            <SecondaryButton type="button" @click="mobileDayOffset -= 2">Previous</SecondaryButton>
+                            <SecondaryButton type="button" @click="goToCurrentMobileDays">Today</SecondaryButton>
+                            <SecondaryButton type="button" @click="mobileDayOffset += 2">Next</SecondaryButton>
+                        </div>
+
+                        <div class="hidden text-center text-lg font-semibold text-gray-900 md:block">
                             {{ weekRangeLabel }}
+                        </div>
+                        <div class="text-center text-lg font-semibold text-gray-900 md:hidden">
+                            {{ mobileRangeLabel }}
                         </div>
 
                         <div class="w-full md:w-64">
@@ -798,7 +829,67 @@ const deleteAppointment = () => {
                 </div>
 
                 <div class="max-h-[65vh] overflow-auto p-6">
-                    <div class="min-w-[1000px]">
+                    <div class="md:hidden">
+                        <div class="grid grid-cols-[64px_repeat(2,minmax(0,1fr))] border-b border-gray-200">
+                            <div class="bg-gray-50 p-2 text-xs font-medium uppercase text-gray-500">Hour</div>
+                            <div
+                                v-for="day in mobileDays"
+                                :key="day.key"
+                                class="border-l bg-gray-50 p-2 text-center"
+                            >
+                                <div class="font-semibold text-gray-900">{{ day.label }}</div>
+                                <div class="text-sm text-gray-600">{{ day.day }}</div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-for="hour in hours"
+                            :key="`mobile-${hour}`"
+                            class="grid min-h-24 grid-cols-[64px_repeat(2,minmax(0,1fr))] border-b border-gray-200"
+                        >
+                            <div class="bg-gray-50 p-2 text-xs font-medium text-gray-700">
+                                {{ String(hour).padStart(2, '0') }}:00
+                            </div>
+
+                            <div
+                                v-for="day in mobileDays"
+                                :key="`mobile-${day.key}-${hour}`"
+                                class="space-y-2 border-l p-1.5"
+                            >
+                                <button
+                                    v-for="slot in slotsForCell(day.key, hour)"
+                                    :key="slot.id"
+                                    type="button"
+                                    class="w-full rounded-md border px-2 py-2 text-left text-xs transition"
+                                    :class="{
+                                        'border-green-200 bg-green-50 hover:bg-green-100': slot.status === 'free',
+                                        'border-red-200 bg-red-50': slot.status === 'taken',
+                                        'ring-2 ring-indigo-500': selectedSlot?.id === slot.id,
+                                    }"
+                                    :disabled="slot.status !== 'free'"
+                                    @click="chooseSlot(slot)"
+                                >
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="font-semibold text-gray-900">{{ slot.time }}</span>
+                                        <span :class="slot.status === 'free' ? 'text-green-700' : 'text-red-700'">
+                                            {{ slot.status }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-1 truncate text-gray-600">{{ slot.stylist_name }}</div>
+
+                                    <div v-if="slot.appointment" class="mt-1 space-y-0.5 text-gray-600">
+                                        <div class="truncate">{{ slot.appointment.service?.name }}</div>
+                                        <div class="truncate">
+                                            {{ slot.appointment.customer?.first_name }}
+                                            {{ slot.appointment.customer?.last_name }}
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden min-w-[1000px] md:block">
                         <div class="grid grid-cols-[80px_repeat(7,minmax(120px,1fr))] border-b border-gray-200">
                             <div class="bg-gray-50 p-3 text-xs font-medium uppercase text-gray-500">Hour</div>
                             <div
