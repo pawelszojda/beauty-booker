@@ -53,6 +53,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Services
                                 </NavLink>
+                                <NavLink
+                                    v-if="!$page.props.auth.isCustomer"
+                                    :href="route('users.index')"
+                                    :active="route().current('users.*')"
+                                >
+                                    Users
+                                </NavLink>
                             </div>
                         </div>
 
@@ -173,6 +180,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('services.*')"
                         >
                             Services
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="!$page.props.auth.isCustomer"
+                            :href="route('users.index')"
+                            :active="route().current('users.*')"
+                        >
+                            Users
                         </ResponsiveNavLink>
                     </div>
 

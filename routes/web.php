@@ -4,6 +4,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UserController;
 use App\Models\Appointment;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,7 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)->except(['show']);
     Route::resource('services', ServiceController::class)->except(['show']);
+    Route::resource('users', UserController::class)->except(['show']);
     Route::resource('appointments', AppointmentController::class)->only(['index']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
