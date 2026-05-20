@@ -283,6 +283,10 @@ const chooseSlot = (slot) => {
     showSlotModal.value = false;
 };
 
+const goToCurrentWeek = () => {
+    weekOffset.value = 0;
+};
+
 const openCustomerDropdown = (event) => {
     showCustomerDropdown.value = true;
     event.target.select();
@@ -771,6 +775,7 @@ const deleteAppointment = () => {
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div class="flex items-center gap-2">
                             <SecondaryButton type="button" @click="weekOffset--">Previous week</SecondaryButton>
+                            <SecondaryButton type="button" @click="goToCurrentWeek">Today</SecondaryButton>
                             <SecondaryButton type="button" @click="weekOffset++">Next week</SecondaryButton>
                         </div>
 
