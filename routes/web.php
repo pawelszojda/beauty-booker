@@ -35,8 +35,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('customers', CustomerController::class)->only(['index']);
-    Route::resource('services', ServiceController::class)->only(['index']);
+    Route::resource('customers', CustomerController::class)->except(['show']);
+    Route::resource('services', ServiceController::class)->except(['show']);
     Route::resource('appointments', AppointmentController::class)->only(['index']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
