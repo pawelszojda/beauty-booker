@@ -1,10 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -368,6 +369,17 @@ const updateAppointment = () => {
         onSuccess: () => closeEditAppointment(),
     });
 };
+
+const deleteAppointment = () => {
+    if (!confirm('Are you sure you want to delete this appointment?')) {
+        return;
+    }
+
+    router.delete(route('dashboard.appointments.destroy', editingAppointment.value.id), {
+        preserveScroll: true,
+        onSuccess: () => closeEditAppointment(),
+    });
+};
 </script>
 
 <template>
@@ -723,9 +735,13 @@ const updateAppointment = () => {
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-3">
-                        <SecondaryButton type="button" @click="closeEditAppointment">Cancel</SecondaryButton>
-                        <PrimaryButton :disabled="editForm.processing">Update appointment</PrimaryButton>
+                    <div class="flex justify-between gap-3">
+                        <DangerButton type="button" @click="deleteAppointment">Delete appointment</DangerButton>
+
+                        <div class="flex gap-3">
+                            <SecondaryButton type="button" @click="closeEditAppointment">Cancel</SecondaryButton>
+                            <PrimaryButton :disabled="editForm.processing">Update appointment</PrimaryButton>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'google_calendar' => [
+        'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+        'calendar_id' => env('GOOGLE_CALENDAR_ID'),
+        'timezone' => env('GOOGLE_CALENDAR_TIMEZONE', 'Europe/Warsaw'),
+    ],
+
 ];

@@ -22,6 +22,10 @@ Route::put('/dashboard/appointments/{appointment}', [DashboardController::class,
     ->middleware(['auth', 'verified'])
     ->name('dashboard.appointments.update');
 
+Route::delete('/dashboard/appointments/{appointment}', [DashboardController::class, 'destroyAppointment'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.appointments.destroy');
+
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)->except(['show']);
     Route::resource('services', ServiceController::class)->except(['show']);

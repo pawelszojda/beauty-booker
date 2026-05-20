@@ -63,7 +63,7 @@ class CustomerController extends Controller
         $this->denyCustomerAccess();
 
         DB::transaction(function () use ($customer): void {
-            $customer->appointments()->delete();
+            $customer->appointments()->each->delete();
             $customer->delete();
         });
 

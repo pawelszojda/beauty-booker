@@ -62,7 +62,7 @@ class ServiceController extends Controller
         $this->denyCustomerAccess();
 
         DB::transaction(function () use ($service): void {
-            $service->appointments()->delete();
+            $service->appointments()->each->delete();
             $service->delete();
         });
 

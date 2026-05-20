@@ -162,6 +162,15 @@ class DashboardController extends Controller
         return redirect()->route('dashboard');
     }
 
+    public function destroyAppointment(Appointment $appointment): RedirectResponse
+    {
+        abort_if(auth()->user()?->isCustomer(), 403);
+
+        $appointment->delete();
+
+        return redirect()->route('dashboard');
+    }
+
     private function customerForUser(User $user): ?Customer
     {
         return Customer::query()
