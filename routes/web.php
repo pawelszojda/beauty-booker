@@ -12,9 +12,8 @@ use Inertia\Inertia;
 Route::redirect('/', '/dashboard');
 
 Route::get('/dashboard', function () {
-    $customer = Customer::query()
-        ->where('email', auth()->user()->email)
-        ->first();
+    $user = auth()->user();
+    $customer = null;
 
     $appointmentsQuery = Appointment::query()
         ->with([
@@ -24,13 +23,19 @@ Route::get('/dashboard', function () {
         ])
         ->orderBy('start_time');
 
-    if ($customer) {
-        $appointmentsQuery->whereBelongsTo($customer);
+    if ($user->isCustomer()) {
+        $customer = Customer::query()
+            ->where('email', $user->email)
+            ->first();
+
+        $customer
+            ? $appointmentsQuery->whereBelongsTo($customer)
+            : $appointmentsQuery->whereRaw('1 = 0');
     }
 
     return Inertia::render('Dashboard', [
         'appointments' => $appointmentsQuery->get(),
-        'appointmentScope' => $customer ? 'customer' : 'all',
+        'appointmentScope' => $user->isCustomer() ? 'customer' : 'all',
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 

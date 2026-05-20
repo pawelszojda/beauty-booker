@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Customer;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -34,9 +33,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'isCustomer' => fn () => $request->user()
-                    ? Customer::query()->where('email', $request->user()->email)->exists()
-                    : false,
+                'role' => $request->user()?->role,
+                'isCustomer' => $request->user()?->isCustomer() ?? false,
+                'isStaff' => $request->user()?->isStaff() ?? false,
+                'isAdministrator' => $request->user()?->isAdministrator() ?? false,
             ],
         ];
     }

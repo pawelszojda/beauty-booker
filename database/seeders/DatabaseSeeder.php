@@ -18,20 +18,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $testUser = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $administrator = User::factory()->administrator()->create([
+            'name' => 'Administrator',
+            'email' => 'admin@example.com',
         ]);
 
         $stylists = User::factory()
+            ->stylist()
             ->count(2)
             ->create();
 
-        $users = $stylists->push($testUser);
+        $staffUsers = $stylists->push($administrator);
+
+        $loginCustomer = Customer::factory()->create([
+            'first_name' => 'Customer',
+            'last_name' => 'Account',
+            'email' => 'customer@example.com',
+        ]);
+
+        User::factory()->customer()->create([
+            'name' => 'Customer Account',
+            'email' => $loginCustomer->email,
+        ]);
 
         $customers = Customer::factory()
             ->count(30)
-            ->create();
+            ->create()
+            ->push($loginCustomer);
 
         $services = collect([
             ['name' => 'Manicure klasyczny', 'duration_minutes' => 45, 'price' => 80.00],
@@ -53,7 +66,7 @@ class DatabaseSeeder extends Seeder
             Appointment::factory()->create([
                 'customer_id' => $customers->random()->id,
                 'service_id' => $service->id,
-                'user_id' => $users->random()->id,
+                'user_id' => $staffUsers->random()->id,
                 'start_time' => $startTime,
                 'end_time' => $startTime->copy()->addMinutes($service->duration_minutes),
                 'status' => fake()->randomElement(['oczekująca', 'potwierdzona', 'odwołana']),

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
 use App\Models\Service;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,10 +71,7 @@ class ServiceController extends Controller
 
     private function denyCustomerAccess(): void
     {
-        abort_if(
-            auth()->user() && Customer::query()->where('email', auth()->user()->email)->exists(),
-            403
-        );
+        abort_if(auth()->user()?->isCustomer(), 403);
     }
 
     /**
