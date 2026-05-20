@@ -18,6 +18,10 @@ Route::post('/dashboard/appointments', [DashboardController::class, 'storeAppoin
     ->middleware(['auth', 'verified'])
     ->name('dashboard.appointments.store');
 
+Route::put('/dashboard/appointments/{appointment}', [DashboardController::class, 'updateAppointment'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.appointments.update');
+
 Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class)->except(['show']);
     Route::resource('services', ServiceController::class)->except(['show']);

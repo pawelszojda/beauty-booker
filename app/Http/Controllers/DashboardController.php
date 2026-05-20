@@ -114,6 +114,54 @@ class DashboardController extends Controller
         return redirect()->route('dashboard');
     }
 
+    public function updateAppointment(Request $request, Appointment $appointment): RedirectResponse
+    {
+        abort_if(auth()->user()?->isCustomer(), 403);
+
+        $validated = $request->validate([
+            'customer_id' => ['required', 'exists:customers,id'],
+            'service_id' => ['required', 'exists:services,id'],
+            'user_id' => ['required', 'exists:users,id'],
+            'start_time' => ['required', 'date'],
+            'status' => ['required', Rule::in(['oczekująca', 'potwierdzona', 'odwołana'])],
+        ]);
+
+        $stylist = User::query()
+            ->whereKey($validated['user_id'])
+            ->whereIn('role', ['administrator', 'stylist'])
+            ->firstOrFail();
+
+        $service = Service::findOrFail($validated['service_id']);
+        $startTime = Carbon::parse($validated['start_time'])->seconds(0);
+        $endTime = $startTime->copy()->addMinutes($service->duration_minutes);
+
+        $this->validateBusinessHours($startTime, $endTime);
+
+        $hasOverlap = Appointment::query()
+            ->whereKeyNot($appointment->id)
+            ->whereBelongsTo($stylist, 'user')
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime)
+            ->exists();
+
+        if ($hasOverlap) {
+            return back()->withErrors([
+                'start_time' => 'This slot is already taken. Please choose another time.',
+            ]);
+        }
+
+        $appointment->update([
+            'customer_id' => $validated['customer_id'],
+            'service_id' => $service->id,
+            'user_id' => $stylist->id,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->route('dashboard');
+    }
+
     private function customerForUser(User $user): ?Customer
     {
         return Customer::query()

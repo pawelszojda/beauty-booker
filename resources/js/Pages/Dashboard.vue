@@ -22,12 +22,26 @@ const weekOffset = ref(0);
 const customerSearch = ref('');
 const showCustomerDropdown = ref(false);
 const slotStylistFilter = ref('');
+const appointmentCustomerFilter = ref('');
+const appointmentCustomerSearch = ref('');
+const showAppointmentCustomerDropdown = ref(false);
+const appointmentSortKey = ref('start_time');
+const appointmentSortDirection = ref('asc');
+const editingAppointment = ref(null);
 
 const form = useForm({
     customer_id: '',
     service_id: '',
     user_id: '',
     start_time: '',
+});
+
+const editForm = useForm({
+    customer_id: '',
+    service_id: '',
+    user_id: '',
+    start_time: '',
+    status: 'oczekująca',
 });
 
 const isCustomer = computed(() => page.props.auth.isCustomer);
@@ -91,6 +105,87 @@ const visibleSlots = computed(() => {
 
     return props.calendarSlots.filter((slot) => slot.stylist_id === Number(stylistId));
 });
+
+const appointmentSortValue = (appointment, key) => {
+    const values = {
+        start_time: appointment.start_time,
+        customer: `${appointment.customer?.last_name ?? ''} ${appointment.customer?.first_name ?? ''}`,
+        service: appointment.service?.name ?? '',
+        stylist: appointment.user?.name ?? '',
+        status: appointment.status ?? '',
+        price: Number(appointment.service?.price ?? 0),
+    };
+
+    return values[key] ?? '';
+};
+
+const selectedAppointmentFilterCustomer = computed(() =>
+    props.customers.find((customer) => customer.id === Number(appointmentCustomerFilter.value)),
+);
+
+const selectedAppointmentFilterCustomerLabel = computed(() =>
+    selectedAppointmentFilterCustomer.value ? customerLabel(selectedAppointmentFilterCustomer.value) : '',
+);
+
+const filteredAppointmentCustomers = computed(() => {
+    const search = appointmentCustomerSearch.value.trim().toLowerCase();
+
+    if (!search || search === selectedAppointmentFilterCustomerLabel.value.toLowerCase()) {
+        return props.customers;
+    }
+
+    return props.customers.filter((customer) =>
+        `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(search) ||
+        `${customer.last_name} ${customer.first_name}`.toLowerCase().includes(search) ||
+        customer.email?.toLowerCase().includes(search) ||
+        customer.phone?.toLowerCase().includes(search),
+    );
+});
+
+const filteredAppointments = computed(() => {
+    const customerId = Number(appointmentCustomerFilter.value);
+
+    if (!customerId) {
+        return props.appointments;
+    }
+
+    return props.appointments.filter((appointment) => appointment.customer?.id === customerId);
+});
+
+const sortedAppointments = computed(() => {
+    return [...filteredAppointments.value].sort((a, b) => {
+        const aValue = appointmentSortValue(a, appointmentSortKey.value);
+        const bValue = appointmentSortValue(b, appointmentSortKey.value);
+
+        if (aValue < bValue) {
+            return appointmentSortDirection.value === 'asc' ? -1 : 1;
+        }
+
+        if (aValue > bValue) {
+            return appointmentSortDirection.value === 'asc' ? 1 : -1;
+        }
+
+        return 0;
+    });
+});
+
+const sortAppointmentsBy = (key) => {
+    if (appointmentSortKey.value === key) {
+        appointmentSortDirection.value = appointmentSortDirection.value === 'asc' ? 'desc' : 'asc';
+        return;
+    }
+
+    appointmentSortKey.value = key;
+    appointmentSortDirection.value = 'asc';
+};
+
+const sortIndicator = (key) => {
+    if (appointmentSortKey.value !== key) {
+        return '';
+    }
+
+    return appointmentSortDirection.value === 'asc' ? ' ↑' : ' ↓';
+};
 
 const today = () => {
     const date = new Date();
@@ -170,6 +265,12 @@ const formatPrice = (price) => {
     }).format(Number(price));
 };
 
+const toDateTimeLocal = (dateTime) => {
+    const date = new Date(dateTime);
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 const chooseSlot = (slot) => {
     if (slot.status !== 'free') {
         return;
@@ -208,9 +309,63 @@ const clearSelectedCustomerIfTyping = () => {
     }
 };
 
+const openAppointmentCustomerDropdown = (event) => {
+    showAppointmentCustomerDropdown.value = true;
+    event.target.select();
+};
+
+const closeAppointmentCustomerDropdown = () => {
+    window.setTimeout(() => {
+        showAppointmentCustomerDropdown.value = false;
+
+        if (selectedAppointmentFilterCustomer.value) {
+            appointmentCustomerSearch.value = selectedAppointmentFilterCustomerLabel.value;
+        }
+    }, 150);
+};
+
+const selectAppointmentFilterCustomer = (customer) => {
+    appointmentCustomerFilter.value = String(customer.id);
+    appointmentCustomerSearch.value = customerLabel(customer);
+    showAppointmentCustomerDropdown.value = false;
+};
+
+const clearAppointmentFilterCustomerIfTyping = () => {
+    if (appointmentCustomerSearch.value !== selectedAppointmentFilterCustomerLabel.value) {
+        appointmentCustomerFilter.value = '';
+    }
+};
+
+const clearAppointmentCustomerFilter = () => {
+    appointmentCustomerFilter.value = '';
+    appointmentCustomerSearch.value = '';
+};
+
 const submit = () => {
     form.post(route('dashboard.appointments.store'), {
         preserveScroll: true,
+    });
+};
+
+const startEditingAppointment = (appointment) => {
+    editingAppointment.value = appointment;
+    editForm.customer_id = appointment.customer?.id ?? '';
+    editForm.service_id = appointment.service?.id ?? '';
+    editForm.user_id = appointment.user?.id ?? '';
+    editForm.start_time = toDateTimeLocal(appointment.start_time);
+    editForm.status = appointment.status ?? 'oczekująca';
+};
+
+const closeEditAppointment = () => {
+    editingAppointment.value = null;
+    editForm.clearErrors();
+    editForm.reset();
+};
+
+const updateAppointment = () => {
+    editForm.put(route('dashboard.appointments.update', editingAppointment.value.id), {
+        preserveScroll: true,
+        onSuccess: () => closeEditAppointment(),
     });
 };
 </script>
@@ -362,24 +517,85 @@ const submit = () => {
                             </div>
 
                             <span class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                                {{ props.appointments.length }} total
+                                {{ sortedAppointments.length }} total
                             </span>
                         </div>
 
-                        <div v-if="props.appointments.length" class="overflow-x-auto">
+                        <div v-if="!isCustomer" class="mb-4 max-w-xl">
+                            <InputLabel for="appointment_customer_filter" value="Filter by customer" />
+                            <div class="relative mt-1 flex gap-2">
+                                <div class="relative flex-1">
+                                    <input
+                                        id="appointment_customer_filter"
+                                        v-model="appointmentCustomerSearch"
+                                        type="text"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        placeholder="Click or type name, surname or phone"
+                                        autocomplete="off"
+                                        @focus="openAppointmentCustomerDropdown"
+                                        @input="clearAppointmentFilterCustomerIfTyping"
+                                        @blur="closeAppointmentCustomerDropdown"
+                                    />
+
+                                    <div
+                                        v-if="showAppointmentCustomerDropdown"
+                                        class="absolute z-50 mt-1 max-h-96 w-[32rem] max-w-[calc(100vw-3rem)] overflow-auto rounded-md border border-gray-200 bg-white shadow-xl"
+                                    >
+                                        <button
+                                            v-for="customer in filteredAppointmentCustomers"
+                                            :key="customer.id"
+                                            type="button"
+                                            class="block w-full px-3 py-2 text-left text-sm hover:bg-indigo-50"
+                                            :class="customer.id === Number(appointmentCustomerFilter) ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'"
+                                            @mousedown.prevent="selectAppointmentFilterCustomer(customer)"
+                                        >
+                                            <div class="font-medium">
+                                                {{ customer.first_name }} {{ customer.last_name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ customer.phone }}<span v-if="customer.email"> · {{ customer.email }}</span>
+                                            </div>
+                                        </button>
+
+                                        <div v-if="!filteredAppointmentCustomers.length" class="px-3 py-3 text-sm text-gray-500">
+                                            No customers found.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <SecondaryButton type="button" @click="clearAppointmentCustomerFilter">
+                                    Clear
+                                </SecondaryButton>
+                            </div>
+                        </div>
+
+                        <div v-if="sortedAppointments.length" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Customer</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Service</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Stylist</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Price</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('start_time')">Date{{ sortIndicator('start_time') }}</button>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('customer')">Customer{{ sortIndicator('customer') }}</button>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('service')">Service{{ sortIndicator('service') }}</button>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('stylist')">Stylist{{ sortIndicator('stylist') }}</button>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('status')">Status{{ sortIndicator('status') }}</button>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            <button type="button" @click="sortAppointmentsBy('price')">Price{{ sortIndicator('price') }}</button>
+                                        </th>
+                                        <th v-if="!isCustomer" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    <tr v-for="appointment in props.appointments" :key="appointment.id">
+                                    <tr v-for="appointment in sortedAppointments" :key="appointment.id">
                                         <td class="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
                                             <div>{{ formatDateTime(appointment.start_time) }}</div>
                                             <div class="text-xs text-gray-500">to {{ formatDateTime(appointment.end_time) }}</div>
@@ -401,6 +617,11 @@ const submit = () => {
                                         <td class="whitespace-nowrap px-4 py-4 text-right text-sm text-gray-900">
                                             {{ formatPrice(appointment.service?.price) }}
                                         </td>
+                                        <td v-if="!isCustomer" class="whitespace-nowrap px-4 py-4 text-right text-sm">
+                                            <SecondaryButton type="button" @click="startEditingAppointment(appointment)">
+                                                Edit
+                                            </SecondaryButton>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -411,6 +632,102 @@ const submit = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div
+            v-if="editingAppointment"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="closeEditAppointment"
+        >
+            <div class="w-full max-w-3xl rounded-lg bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b px-6 py-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Edit appointment</h3>
+                    <button class="text-2xl leading-none text-gray-400 hover:text-gray-600" type="button" @click="closeEditAppointment">
+                        &times;
+                    </button>
+                </div>
+
+                <form class="space-y-6 p-6" @submit.prevent="updateAppointment">
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <div>
+                            <InputLabel for="edit_customer_id" value="Customer" />
+                            <select
+                                id="edit_customer_id"
+                                v-model="editForm.customer_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            >
+                                <option v-for="customer in props.customers" :key="customer.id" :value="customer.id">
+                                    {{ customer.first_name }} {{ customer.last_name }}
+                                </option>
+                            </select>
+                            <InputError class="mt-2" :message="editForm.errors.customer_id" />
+                        </div>
+
+                        <div>
+                            <InputLabel for="edit_service_id" value="Service" />
+                            <select
+                                id="edit_service_id"
+                                v-model="editForm.service_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            >
+                                <option v-for="service in props.services" :key="service.id" :value="service.id">
+                                    {{ service.name }} - {{ service.duration_minutes }} min
+                                </option>
+                            </select>
+                            <InputError class="mt-2" :message="editForm.errors.service_id" />
+                        </div>
+
+                        <div>
+                            <InputLabel for="edit_user_id" value="Stylist" />
+                            <select
+                                id="edit_user_id"
+                                v-model="editForm.user_id"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            >
+                                <option v-for="stylist in props.stylists" :key="stylist.id" :value="stylist.id">
+                                    {{ stylist.name }}
+                                </option>
+                            </select>
+                            <InputError class="mt-2" :message="editForm.errors.user_id" />
+                        </div>
+
+                        <div>
+                            <InputLabel for="edit_start_time" value="Start time" />
+                            <input
+                                id="edit_start_time"
+                                v-model="editForm.start_time"
+                                type="datetime-local"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            />
+                            <InputError class="mt-2" :message="editForm.errors.start_time" />
+                        </div>
+
+                        <div>
+                            <InputLabel for="edit_status" value="Status" />
+                            <select
+                                id="edit_status"
+                                v-model="editForm.status"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                required
+                            >
+                                <option value="oczekująca">oczekująca</option>
+                                <option value="potwierdzona">potwierdzona</option>
+                                <option value="odwołana">odwołana</option>
+                            </select>
+                            <InputError class="mt-2" :message="editForm.errors.status" />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <SecondaryButton type="button" @click="closeEditAppointment">Cancel</SecondaryButton>
+                        <PrimaryButton :disabled="editForm.processing">Update appointment</PrimaryButton>
+                    </div>
+                </form>
             </div>
         </div>
 
