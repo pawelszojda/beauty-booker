@@ -100,12 +100,30 @@ const filteredCustomers = computed(() => {
 
 const visibleSlots = computed(() => {
     const stylistId = slotStylistFilter.value || form.user_id;
+    const now = new Date();
+    const selectedCustomerId = Number(form.customer_id);
 
-    if (!stylistId) {
-        return props.calendarSlots;
-    }
+    return props.calendarSlots.filter((slot) => {
+        if (stylistId && slot.stylist_id !== Number(stylistId)) {
+            return false;
+        }
 
-    return props.calendarSlots.filter((slot) => slot.stylist_id === Number(stylistId));
+        const isPastSlot = new Date(slot.start_time) < now;
+
+        if (!isPastSlot) {
+            return true;
+        }
+
+        if (slot.status !== 'taken' || !slot.appointment) {
+            return false;
+        }
+
+        if (isCustomer.value) {
+            return true;
+        }
+
+        return selectedCustomerId && slot.appointment.customer?.id === selectedCustomerId;
+    });
 });
 
 const appointmentSortValue = (appointment, key) => {

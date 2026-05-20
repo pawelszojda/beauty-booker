@@ -189,8 +189,8 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $rangeStart = now()->startOfDay();
-        $rangeEnd = now()->copy()->addDays(14)->endOfDay();
+        $rangeStart = now()->copy()->subDays(30)->startOfDay();
+        $rangeEnd = now()->copy()->addDays(60)->endOfDay();
 
         $appointments = Appointment::query()
             ->with([
@@ -204,7 +204,7 @@ class DashboardController extends Controller
 
         $slots = [];
 
-        for ($day = now()->startOfDay(); $day->lte(now()->addDays(14)->startOfDay()); $day->addDay()) {
+        for ($day = $rangeStart->copy(); $day->lte($rangeEnd->copy()->startOfDay()); $day->addDay()) {
             foreach ($stylists as $stylist) {
                 for ($slot = $day->copy()->setTime(9, 0); $slot->lt($day->copy()->setTime(18, 0)); $slot->addMinutes(30)) {
                     $slotEnd = $slot->copy()->addMinutes(30);
