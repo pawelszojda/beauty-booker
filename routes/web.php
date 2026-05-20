@@ -4,21 +4,34 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
-use Illuminate\Foundation\Application;
+use App\Models\Appointment;
+use App\Models\Customer;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+Route::redirect('/', '/dashboard');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $customer = Customer::query()
+        ->where('email', auth()->user()->email)
+        ->first();
+
+    $appointmentsQuery = Appointment::query()
+        ->with([
+            'customer:id,first_name,last_name,phone,email',
+            'service:id,name,duration_minutes,price',
+            'user:id,name,email',
+        ])
+        ->orderBy('start_time');
+
+    if ($customer) {
+        $appointmentsQuery->whereBelongsTo($customer);
+    }
+
+    return Inertia::render('Dashboard', [
+        'appointments' => $appointmentsQuery->get(),
+        'appointmentScope' => $customer ? 'customer' : 'all',
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
