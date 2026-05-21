@@ -60,6 +60,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     {{ $t('Users') }}
                                 </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.isAdministrator"
+                                    :href="route('reports.index')"
+                                    :active="route().current('reports.*')"
+                                >
+                                    {{ $t('Reports') }}
+                                </NavLink>
                             </div>
                         </div>
 
@@ -187,6 +194,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('users.*')"
                         >
                             {{ $t('Users') }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.isAdministrator"
+                            :href="route('reports.index')"
+                            :active="route().current('reports.*')"
+                        >
+                            {{ $t('Reports') }}
                         </ResponsiveNavLink>
                     </div>
 
